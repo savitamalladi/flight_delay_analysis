@@ -8,7 +8,7 @@ Flight delays are a common frustration for travellers, with patterns often influ
 By visualizing delays based on key metrics like hour of the day, month, and airline and various causes of delay, this web application enables users to explore delay patterns and better understand what drives these delays.
 
 ### DATA SOURCE AND OPERATIONS
-The data was extracted from [Bureau of Transportation Statistics](https://www.bts.gov/) The dataset was cleaned and preprocessed to ensure the accuracy of insights, including the removal of irrelevant columns and handling of missing data. The analysis focuses on key metrics like departure delays, number of flights, and airline-specific performance.
+The data was extracted from [Bureau of Transportation Statistics](https://www.bts.gov/). The dataset was cleaned and preprocessed to ensure the accuracy of analysis. This included the removal of irrelevant columns and handling of missing data. The analysis focuses on key metrics like departure delays, number of flights, and airline-specific performance.
 
 All visualizations were created using Python libraries such as Plotly and Pandas, enabling an interactive exploration of delay patterns.
 

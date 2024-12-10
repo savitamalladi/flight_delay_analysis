@@ -6,12 +6,6 @@ import seaborn as sns
 import pickle
 import plotly.express as px
 
-# Loading Pretrained Model
-@st.cache_resource
-def load_model():
-    with open("trained_model.pkl", "rb") as file:
-        model = pickle.load(file)
-    return model
 
 # Load the dataset 
 @st.cache_data
@@ -20,7 +14,7 @@ def load_data():
     flight_data['Scheduled Hour'] = pd.to_datetime(flight_data['Scheduled departure time'], format='%H:%M').dt.hour
     return flight_data
 
-model = load_model()
+
 flight_data = load_data()
 
 
@@ -101,55 +95,69 @@ with tab1:
 
     st.markdown('---')
 
-    # Visualization 3: Heatmap of % of delayed flight by month and hour
-    st.subheader("Heatmap of Percentage of Delays by Month and Hour")
-    flight_data['IsDelayed'] = flight_data['Departure delay (Minutes)'] > 15
+    # Visualization 3: Heatmap of Delayed Flights by Month and Hour
+    
+    st.subheader("Heatmap of Delayed Flights by Month and Hour")
 
+    # Convert Date and Scheduled Departure Time into useful formats
     flight_data['Date (MM/DD/YYYY)'] = pd.to_datetime(flight_data['Date (MM/DD/YYYY)'], format='%d/%m/%Y', errors='coerce')
     flight_data['Month'] = flight_data['Date (MM/DD/YYYY)'].dt.month_name()
     flight_data['Scheduled Hour'] = pd.to_datetime(flight_data['Scheduled departure time'], format='%H:%M', errors='coerce').dt.hour
 
-    # Grouping by Hour and Month for Total Flights
-    total_flights = flight_data.groupby(['Scheduled Hour', 'Month']).size().reset_index(name='Total Flights')
+    # Determine if a flight is delayed
+    flight_data['IsDelayed'] = flight_data['Departure delay (Minutes)'] > 15
 
     # Grouping by Hour and Month for Delayed Flights
     delayed_flights = flight_data[flight_data['IsDelayed']].groupby(['Scheduled Hour', 'Month']).size().reset_index(name='Delayed Flights')
 
-    # Merging Total and Delayed Flights
-    heatmap_data = pd.merge(total_flights, delayed_flights, on=['Scheduled Hour', 'Month'], how='left')
-    heatmap_data['Delayed Flights'] = heatmap_data['Delayed Flights'].fillna(0)
-
-    # Delay Percentage
-    heatmap_data['Delay Percentage'] = (heatmap_data['Delayed Flights'] / heatmap_data['Total Flights']) * 100
-
+    # Order months for proper visualization
     month_order = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ]
-    heatmap_data['Month'] = pd.Categorical(
-        heatmap_data['Month'], 
+    delayed_flights['Month'] = pd.Categorical(
+        delayed_flights['Month'], 
         categories=month_order, 
         ordered=True
     )
-    heatmap_data = heatmap_data.sort_values(by=['Month', 'Scheduled Hour'])
 
+    # Sort data for visualization
+    delayed_flights = delayed_flights.sort_values(by=['Month', 'Scheduled Hour'])
+
+    # Create the heatmap using Plotly
     fig = px.density_heatmap(
-        heatmap_data,
+        delayed_flights,
         x='Month',
         y='Scheduled Hour',
-        z='Delay Percentage',
+        z='Delayed Flights',
         color_continuous_scale='Viridis',
-        labels={'Scheduled Hour': 'Hour of Day', 'Month': 'Month', 'Delay Percentage': 'Delay %'},
+        labels={
+            'Scheduled Hour': 'Hour of Day',
+            'Month': 'Month',
+            'Delayed Flights': 'Number of Delayed Flights'
+        },
     )
 
+    # Ensure y-axis shows all hours (0-23)
+    fig.update_yaxes(dtick=1, title_text="Hour of Day")
+
+    # Display the heatmap
     st.plotly_chart(fig)
+
+    # Add description
     if selected_airline == "All":
-            st.write("This :green[Heatmap] illustrates the percentage of delays by hour and month across **all airlines**. It provides a clear view of the times and months when delays are most frequent, helping users identify patterns and optimize their travel plans accordingly.")
+        st.write(
+            "This :green[Heatmap] illustrates the number of delayed flights by hour and month across **all airlines**. "
+            "It provides insights into when delays are most frequent, helping users analyze patterns and plan better."
+        )
     else:
-            st.write(f"This :green[Heatmap] illustrates the percentage of delays by hour and month in **{selected_airline}** airlines. It provides a clear view of the times and months when delays are most frequent, helping users identify patterns and optimize their travel plans accordingly.")
+        st.write(
+            f"This :green[Heatmap] illustrates the number of delayed flights by hour and month in **{selected_airline}** airlines. "
+            "It helps users understand delay patterns specific to this airline for better decision-making."
+        )
 
-    st.markdown('---')    
-
+    st.markdown('---')
+    
 
 
 
@@ -162,6 +170,8 @@ with tab2:
         st.write(f"Analysis of the cause of delay for **{selected_airline}** airline.")
 
     st.markdown('---')
+
+    
 
     # Visualization 1: Delays by Weather Conditions
     st.subheader("Impact of Weather Conditions on Delays")

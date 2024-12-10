@@ -33,7 +33,7 @@ st.write("This page provides interactive visualizations to explore delay pattern
 # Tabs for different types of visualizations
 tab1, tab2 = st.tabs(["Time", "Cause"])
 
-### Tab 1: General Delay Analysis ###
+# Tab 1: General Delay Analysis 
 with tab1:
     st.subheader("Delay Time Analysis")
     
@@ -49,10 +49,9 @@ with tab1:
 
     st.subheader("Number of Delays per Month")
     flight_data['Date (MM/DD/YYYY)'] = pd.to_datetime(flight_data['Date (MM/DD/YYYY)'], format='%m/%d/%Y')
-    # Extract month and year for grouping
+    # Extracting month and year 
     flight_data['Month'] = flight_data['Date (MM/DD/YYYY)'].dt.strftime('%Y-%m')
 
-    # Group by month and count the number of delays
     delays_per_month = (
         flight_data[flight_data['Departure delay (Minutes)'] > 15]
         .groupby('Month')
@@ -64,7 +63,6 @@ with tab1:
     delays_per_month['Month'] = pd.to_datetime(delays_per_month['Month'], format='%Y-%m')
     delays_per_month = delays_per_month.sort_values('Month')
 
-    # Ploting the bar chart
     fig = px.bar(
         delays_per_month,
         x='Month',
@@ -99,12 +97,12 @@ with tab1:
     
     st.subheader("Heatmap of Delayed Flights by Month and Hour")
 
-    # Convert Date and Scheduled Departure Time into useful formats
+    # fixing data
     flight_data['Date (MM/DD/YYYY)'] = pd.to_datetime(flight_data['Date (MM/DD/YYYY)'], format='%d/%m/%Y', errors='coerce')
     flight_data['Month'] = flight_data['Date (MM/DD/YYYY)'].dt.month_name()
     flight_data['Scheduled Hour'] = pd.to_datetime(flight_data['Scheduled departure time'], format='%H:%M', errors='coerce').dt.hour
 
-    # Determine if a flight is delayed
+    # Determine delay threshold
     flight_data['IsDelayed'] = flight_data['Departure delay (Minutes)'] > 15
 
     # Grouping by Hour and Month for Delayed Flights
@@ -137,9 +135,7 @@ with tab1:
             'Delayed Flights': 'Number of Delayed Flights'
         },
     )
-
-    # Ensure y-axis shows all hours (0-23)
-    fig.update_yaxes(dtick=1, title_text="Hour of Day")
+    
 
     # Display the heatmap
     st.plotly_chart(fig)
